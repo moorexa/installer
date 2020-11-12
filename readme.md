@@ -26,7 +26,7 @@ php -r "copy('http://moorexa.com/raw-installer', 'installer.php');"; php install
 
 ## How to install manually
 1. Goto this address from your browser ```http://moorexa.com/get-installer``` 
-2. Download the ```installer.php``` file 
+2. Save the ```installer.php``` file 
 3. Open your terminal or command line
 4. Navigate to where the ```installer.php``` file is and run the following code below
 ```bash
