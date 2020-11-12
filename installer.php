@@ -120,16 +120,16 @@ foreach ($argv as $command) :
 endforeach;
 
 
-if (!$updateInstaller) :
+if (!$updateInstaller && !defined("DIRECT_INSTALLATION")) :
 
-// ask user 
-fwrite(STDOUT, PHP_EOL . 'What version of moorexa should we install? (Hit Enter to install the latest) : ');
+	// ask user 
+	fwrite(STDOUT, PHP_EOL . 'What version of moorexa should we install? (Hit Enter to install the latest) : ');
 
-// read input
-$input = readInput();
+	// read input
+	$input = readInput();
 
-// assign version
-$version = $input != '' ? $input : $version;
+	// assign version
+	$version = $input != '' ? $input : $version;
 
 endif;
 
@@ -139,47 +139,52 @@ $workingDirectory = $_SERVER['PWD'];
 // get the home directory
 $homeDirectory = $_SERVER['HOME'];
 
-// create directory
-if (!is_dir($homeDirectory . '/moorexa')) mkdir($homeDirectory . '/moorexa');
+// run except for direct installer
+if (!defined('DIRECT_INSTALLATION')) :
 
-// create a new file here
-$moorexaFile = $homeDirectory . '/moorexa/moorexa';
+	// create directory
+	if (!is_dir($homeDirectory . '/moorexa')) mkdir($homeDirectory . '/moorexa');
 
-// put content inside a new file
-file_put_contents($moorexaFile, file_get_contents('https://raw.githubusercontent.com/moorexa/installer/'.$version.'/moorexa'));
+	// create a new file here
+	$moorexaFile = $homeDirectory . '/moorexa/moorexa';
 
-if (!$updateInstaller) :
+	// put content inside a new file
+	file_put_contents($moorexaFile, file_get_contents('https://raw.githubusercontent.com/moorexa/installer/'.$version.'/moorexa'));
 
-// create path
-screen_display('Checking if PATH has been registered.', 'success');
+	if (!$updateInstaller) :
 
-// get the os
-$os = preg_replace('/[s]+/', '', php_uname('s'));
+	// create path
+	screen_display('Checking if PATH has been registered.', 'success');
 
-// path file
-$pathFile = $homeDirectory . '/moorexa/'.$os.'_path.d';
+	// get the os
+	$os = preg_replace('/[s]+/', '', php_uname('s'));
 
-// path format for different os
-if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') :
+	// path file
+	$pathFile = $homeDirectory . '/moorexa/'.$os.'_path.d';
 
-	// window profile
-	$profile = 'pathman /au c:\\' . $homeDirectory . '\\moorexa';
+	// path format for different os
+	if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') :
 
-else:
+		// window profile
+		$profile = 'pathman /au c:\\' . $homeDirectory . '\\moorexa';
 
-	// profile name
-	$profileName = '.bashrc';
+	else:
 
-	// check if this file exists
-	if (file_exists($homeDirectory . '/.bash_profile')) $profileName = '.bash_profile';
+		// profile name
+		$profileName = '.bashrc';
 
-	// get the profile name
-	$profile = 'echo "alias moorexa=\"php '.$homeDirectory.'/moorexa/moorexa"\" >> ~/' . $profileName . ';source ~/' . $profileName;
+		// check if this file exists
+		if (file_exists($homeDirectory . '/.bash_profile')) $profileName = '.bash_profile';
 
-endif;
+		// get the profile name
+		$profile = 'echo "alias moorexa=\"php '.$homeDirectory.'/moorexa/moorexa"\" >> ~/' . $profileName . ';source ~/' . $profileName;
 
-// check if path has been created
-if (file_exists($pathFile)) return screen_display('PATH Added previously. Installation would not continue.', 'error');
+	endif;
+
+	// check if path has been created
+	if (file_exists($pathFile)) return screen_display('PATH Added previously. Installation would not continue.', 'error');
+
+	endif;
 
 endif;
 
@@ -194,6 +199,9 @@ function download_from_github(string $link, string $fileName, string $version = 
 
 	// get the home directory
 	$homeDirectory = $GLOBALS['homeDirectory'];
+
+	// get the storage directory
+	$storageDirectory = defined('DIRECT_INSTALLATION') ? __DIR__ . '/tmp/' : $homeDirectory . '/moorexa/storage/';
 
 	// get updateInstaller bool
 	$updateInstaller = $GLOBALS['updateInstaller'];
@@ -233,7 +241,7 @@ function download_from_github(string $link, string $fileName, string $version = 
             // caching begins
             screen_display('Caching master branch, please wait for the next process..', 'success');
         
-            $destination = $homeDirectory . '/moorexa/storage/'.$version . '-' .$fileName.'.zip';
+            $destination = $storageDirectory . $version . '-' .$fileName.'.zip';
 
             // delete existsing
             if ($updateInstaller) :
@@ -356,7 +364,7 @@ function download_from_github(string $link, string $fileName, string $version = 
 	                        // caching begins
 				            screen_display('Caching version '.$version.', please wait for the next process..', 'success');
 	        
-	                        $destination = $homeDirectory . '/moorexa/storage/'.preg_replace('/[s]+/', '', $version).'-'.$fileName.'.zip';
+	                        $destination = $storageDirectory . preg_replace('/[s]+/', '', $version).'-'.$fileName.'.zip';
 
 	                        // delete existsing
 				            if ($updateInstaller) :
@@ -401,7 +409,7 @@ function download_from_github(string $link, string $fileName, string $version = 
 sleep(1);
 
 // create storage folder
-if (!is_dir($homeDirectory . '/moorexa/storage/')) mkdir($homeDirectory . '/moorexa/storage/');
+if (!is_dir($homeDirectory . '/moorexa/storage/') && !defined('DIRECT_INSTALLATION')) mkdir($homeDirectory . '/moorexa/storage/');
 
 // repo to download
 $repos = [
@@ -411,6 +419,9 @@ $repos = [
 	'moorexa/src' 		=> 'moorexaSource',
 	'moorexa/package' 	=> 'moorexaPackager'
 ];
+
+// Load repo
+$repos = defined('REPO_TO_INSTALL') ? REPO_TO_INSTALL : $repos;
 
 // download a fresh copy
 $downloadFreshCopy = true;
@@ -485,7 +496,7 @@ $requiredTemplates = [
 // are we good
 if ($completed == count($repos)) :
 
-	if ($downloadFreshCopy) :
+	if ($downloadFreshCopy && !defined('DIRECT_INSTALLATION')) :
 
 		// run download
 		foreach ($requiredTemplates as $url => $fileName) :
@@ -515,24 +526,28 @@ if ($completed == count($repos)) :
 	// fresh installation
 	if (!$updateInstaller) :
 
-	// adding to system paths
-	screen_display('Adding moorexa to your system paths', 'success');
+		if (!defined('DIRECT_INSTALLATION')) :
 
-	// add profile
-	pclose(popen($profile, "w"));
+			// adding to system paths
+			screen_display('Adding moorexa to your system paths', 'success');
 
-	// add path file
-	file_put_contents($pathFile, $profile);
+			// add profile
+			pclose(popen($profile, "w"));
 
-	// all done!
-	screen_display('All done. You can enter "moorexa" on your terminal or cmd to see a list of options avaliable to you. Thank you for installing moorexa.
+			// add path file
+			file_put_contents($pathFile, $profile);
 
-You may have to restart your terminal or try any of this commands to update your system paths.' . "\n" .
-"
-[Mac] > source ~/.bash_profile
-[Ubuntu or Linux] > source ~/.bashrc
+			// all done!
+			screen_display('All done. You can enter "moorexa" on your terminal or cmd to see a list of options avaliable to you. Thank you for installing moorexa.
 
-Or just go on with closing and reopening your terminal before trying \"moorexa\" command.\n\n");
+		You may have to restart your terminal or try any of this commands to update your system paths.' . "\n" .
+		"
+		[Mac] > source ~/.bash_profile
+		[Ubuntu or Linux] > source ~/.bashrc
+
+		Or just go on with closing and reopening your terminal before trying \"moorexa\" command.\n\n");
+
+		endif;
 
 	else:
 
@@ -541,14 +556,18 @@ Or just go on with closing and reopening your terminal before trying \"moorexa\"
 
 	endif;
 
-	// send a signal. Download was successfull
-	$ch = curl_init('http://moorexa.com/installation-complete');
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-    curl_setopt($ch, CURLOPT_USERAGENT, 'Moorexa Installer#successfull');
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Installation-Signal: Complete'])
-    curl_exec($ch);
-    curl_close($ch);
+	if (!defined('DIRECT_INSTALLATION')) :
+
+		// send a signal. Download was successfull
+		$ch = curl_init('http://moorexa.com/installation-complete');
+	    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+	    curl_setopt($ch, CURLOPT_USERAGENT, 'Moorexa Installer#successfull');
+	    curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Installation-Signal: Complete']);
+	    curl_exec($ch);
+	    curl_close($ch);
+
+	endif;
 
 else:
 	// you may have to run this installation again
