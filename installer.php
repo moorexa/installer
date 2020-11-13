@@ -556,18 +556,14 @@ if ($completed == count($repos)) :
 
 	endif;
 
-	if (!defined('DIRECT_INSTALLATION')) :
-
-		// send a signal. Download was successfull
-		$ch = curl_init('http://moorexa.com/installation-complete');
-	    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
-	    curl_setopt($ch, CURLOPT_USERAGENT, 'Moorexa Installer#successfull');
-	    curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Installation-Signal: Complete']);
-	    curl_exec($ch);
-	    curl_close($ch);
-
-	endif;
+	// send a signal. Download was successfull
+	$ch = curl_init('http://moorexa.com/installation-complete');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+    curl_setopt($ch, CURLOPT_USERAGENT, 'Moorexa Installer#successfull');
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['X-Installation-Signal: Complete']);
+    curl_exec($ch);
+    curl_close($ch);
 
 else:
 	// you may have to run this installation again
