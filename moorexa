@@ -658,6 +658,11 @@ class MoorexaInstaller
             // final note
             screen_display("\n".'So what next?'."\n". $changeDirectory .' "moorexa install" to load required dependencies, or "moorexa serve" to start development server if dependencies already exists.'."\n\n".'Thank you for building with Moorexa..');
 
+        else:
+
+            // all good
+            screen_display('Project created in '.WORKING_DIRECTORY.'.' . "\n", 'success');
+
         endif;
 
     }
