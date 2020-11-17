@@ -646,14 +646,19 @@ class MoorexaInstaller
 
         endif;
 
-        // all good
-        screen_display('Your project has been created successfully in '.WORKING_DIRECTORY.'.', 'success');
+        // hide success message. 
+        if (!defined('DIRECT_INSTALLATION')) :
 
-        // change directory
-        $changeDirectory = $directory == WORKING_DIRECTORY ? 'run ' : 'cd into "'.$directory.'", and run ';
+            // all good
+            screen_display('Your project has been created successfully in '.WORKING_DIRECTORY.'.', 'success');
 
-        // final note
-        screen_display("\n".'So what next?'."\n". $changeDirectory .' "moorexa install" to load required dependencies, or "moorexa serve" to start development server if dependencies already exists.'."\n\n".'Thank you for building with Moorexa..');
+            // change directory
+            $changeDirectory = $directory == WORKING_DIRECTORY ? 'run ' : 'cd into "'.$directory.'", and run ';
+
+            // final note
+            screen_display("\n".'So what next?'."\n". $changeDirectory .' "moorexa install" to load required dependencies, or "moorexa serve" to start development server if dependencies already exists.'."\n\n".'Thank you for building with Moorexa..');
+
+        endif;
 
     }
     
