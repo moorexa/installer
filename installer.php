@@ -134,10 +134,10 @@ if (!$updateInstaller && !defined("DIRECT_INSTALLATION")) :
 endif;
 
 // get working directory
-$workingDirectory = $_SERVER['PWD'];
+$workingDirectory = isset($_SERVER['PWD']) ? $_SERVER['PWD'] : '/';
 
 // get the home directory
-$homeDirectory = $_SERVER['HOME'];
+$homeDirectory = isset($_SERVER['HOME']) ? $_SERVER['HOME'] : '/';
 
 // run except for direct installer
 if (!defined('DIRECT_INSTALLATION')) :
