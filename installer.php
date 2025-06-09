@@ -3,7 +3,7 @@
 // check system requirements
 $requirements = [
 
-	'PHP' => '7.2',
+	'PHP' => '8.0',
 	'functions' => [
 		'curl_init',
 		'openssl_encrypt'
@@ -27,14 +27,17 @@ function screen_display($message, string $type = '')
 // convert to readable size
 function convertToReadableSize($size, &$sbase=null)
 {
-    $base = log($size) / log(1024);
-    $suffix = array("Byte", "KB", "MB", "GB", "TB");
-    $f_base = floor($base);
-    $convert = round(pow(1024, $base - floor($base)), 1) . $suffix[$f_base];
+	$size_ = is_finite($size) ? (int)$size : 0;
+	if ($size_ > 0) {
+		$base = log($size_) / log(1024);
+		$suffix = array("Byte", "KB", "MB", "GB", "TB");
+		$f_base = floor($base);
+		$convert = round(pow(1024, $base - floor($base)), 1) . $suffix[$f_base];
 
-    $sbase = strtolower($suffix[$f_base]);
+		$sbase = strtolower($suffix[$f_base]);
 
-    if ($convert > 0) return $convert;
+		if ($convert > 0) return $convert;
+	}
 
     return 0 . 'KB';
 }
@@ -212,12 +215,14 @@ function download_from_github(string $link, string $fileName, string $version = 
 	// get the master branch
 	if ($version === 'master') :
 
-		$endpoint = 'https://github.com/'.$link.'/archive/master.zip';
+		$endpoint = 'https://github.com/'.$link.'/archive/refs/heads/master.zip';
 
         $ch = curl_init($endpoint);
         curl_setopt($ch, CURLOPT_BINARYTRANSFER, 1);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($ch, CURLOPT_USERAGENT, $agent);
 
         $content = curl_exec($ch);
@@ -274,6 +279,8 @@ function download_from_github(string $link, string $fileName, string $version = 
         $ch = curl_init($endpoint);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($ch, CURLOPT_USERAGENT, $agent);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
         $content = curl_exec($ch);
         $err = curl_error($ch);
         curl_close($ch);
@@ -336,7 +343,7 @@ function download_from_github(string $link, string $fileName, string $version = 
 	                
 	                    // success
 	                    $error = false;
-	                    $endpoint = 'https://github.com/'.$link.'/archive/'.$version.'.zip';
+	                    $endpoint = 'https://github.com/'.$link.'/archive/refs/heads/'.$version.'.zip';
 	                    screen_display('trying to fetch archive with @'.$endpoint, 'success');
 	                    sleep(1);
 
@@ -344,6 +351,8 @@ function download_from_github(string $link, string $fileName, string $version = 
 	                    curl_setopt($ch, CURLOPT_BINARYTRANSFER, 1);
 	                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 	                    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
+						curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+						curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
 	                    curl_setopt($ch, CURLOPT_USERAGENT, $agent);
 	                    curl_setopt($ch, CURLOPT_HTTPHEADER, [
 	                        'If-Modified-Since: Thu, 05 Jul 2012 15:31:30 GMT'
